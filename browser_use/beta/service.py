@@ -16,6 +16,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import weakref
 from collections.abc import Awaitable, Callable
 from contextlib import nullcontext, suppress
 from datetime import datetime
@@ -4386,6 +4387,8 @@ class Agent(Generic[Context, AgentStructuredOutput]):
 		self.state.loop_detector.window_size = loop_detection_window
 		timestamp = int(time.time())
 		self.agent_directory = Path(tempfile.gettempdir()) / f'browser_use_agent_{self.id}_{timestamp}'
+		# Removed when the agent is dropped, not in close(): history screenshots are read from here after run() returns.
+		weakref.finalize(self, shutil.rmtree, self.agent_directory, ignore_errors=True)
 		self._set_file_system(file_system_path)
 		self._set_screenshot_service()
 		self.settings = AgentSettings(

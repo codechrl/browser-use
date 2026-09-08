@@ -4,8 +4,10 @@ import inspect
 import json
 import logging
 import re
+import shutil
 import tempfile
 import time
+import weakref
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, cast
@@ -447,6 +449,8 @@ class Agent(Generic[Context, AgentStructuredOutput]):
 		timestamp = int(time.time())
 		base_tmp = Path(tempfile.gettempdir())
 		self.agent_directory = base_tmp / f'browser_use_agent_{self.id}_{timestamp}'
+		# Removed when the agent is dropped, not in close(): history screenshots are read from here after run() returns.
+		weakref.finalize(self, shutil.rmtree, self.agent_directory, ignore_errors=True)
 
 		# Initialize file system and screenshot service
 		self._set_file_system(file_system_path)
